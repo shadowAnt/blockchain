@@ -141,7 +141,7 @@ class Blockchain(object):
         :param chain: <list> A blockchain
         :return: <bool> True if valid, False if not
         """
-
+        # 两个指针分别指向第一个和第二个块，分别为lastblock和block
         last_block = chain[0]
         current_index = 1
         while current_index < len(chain):
@@ -157,6 +157,7 @@ class Blockchain(object):
             if not self.valid_proof(last_block['proof'], block['proof']):
                 return False
 
+            # 指针后移
             last_block = block
             current_index += 1
         return True

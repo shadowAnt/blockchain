@@ -36,6 +36,7 @@ class Blockchain(object):
 
     def new_block(self, proof, previous_hash=None):
         # Create a new Block and add it to the chain
+        # 当挖矿成功，找到proof之后会调用这个函数，把当前累积的无块归属的交易全部放入该块，再清空当前交易记录。
         """
         生成新块
         :param proof: <int> The proof given by the Proof of Work algorithm POW
@@ -124,9 +125,11 @@ class Blockchain(object):
 app = Flask(__name__)
 
 # Generate a globally unique address for this node
+# 该标识符也是挖矿成功后奖励币的接收者
 node_identifier = str(uuid4()).replace('-', '')
 
 # Instantiate the Blockchain
+# 实例化Blockchain类
 blockchain = Blockchain()
 
 # 创建挖矿接口
@@ -138,8 +141,7 @@ def mine():
     last_proof = last_block['proof']
     proof = blockchain.proof_of_work(last_proof)
 
-    # 给工作量证明的节点提供奖励.
-    # 发送者为 "0" 表明是新挖出的币
+    # 给工作量证明的节点提供奖励.发送者为 "0" 表明是新挖出的币
     blockchain.new_transaction(
         sender="0",
         recipient=node_identifier,
@@ -163,7 +165,6 @@ def mine():
 def new_transaction():
     values = request.get_json()
 
-    # Check that the required fields are in the POST'ed data
     # 格式检查
     required = ['sender', 'recipient', 'amount']
     if not all(k in values for k in required):
@@ -172,7 +173,6 @@ def new_transaction():
     # Create a new Transaction
     # 返回的index是存储这个交易记录的区块的index
     index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
-
     response = {'message': f'Transaction will be added to Block {index}'}
     return jsonify(response), 201
 
@@ -187,4 +187,4 @@ def full_chain():
     return jsonify(response), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='127.0.0.1', port=5000)

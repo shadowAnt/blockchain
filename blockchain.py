@@ -186,10 +186,18 @@ def full_chain():
     }
     return jsonify(response), 200
 
+<<<<<<< HEAD
 @app.route('/nowtransactions', methods=['GET'])
 def show_transactions():
     response = {
         'transactions': blockchain.current_transactions
+=======
+# 返回流离的未归属的交易记录,当挖矿成功后会清空这些，并放入新快中
+@app.route('/currenttransactions', methods=['GET'])
+def show_currenttransactions():
+    response = {
+        'currenttransactions': blockchain.current_transactions
+>>>>>>> 7a5932843da4902c7398cf3fa0590abf2306e378
     }
     return jsonify(response), 200
 

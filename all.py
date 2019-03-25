@@ -9,6 +9,10 @@ import hashlib
 import json
 from time import time
 from flask import Flask, jsonify, request
+<<<<<<< HEAD
+=======
+from urllib.parse import urlparse
+>>>>>>> 7a5932843da4902c7398cf3fa0590abf2306e378
 from uuid import uuid4
 
 class Blockchain(object):
@@ -34,6 +38,21 @@ class Blockchain(object):
         # Create the genesis block
         self.new_block(proof=100, previous_hash=1)
 
+<<<<<<< HEAD
+=======
+        self.nodes = set()
+
+    def register_node(self, address):
+        """
+        add a node to the lists of nodes(set)
+        :param address: <str> address of the node Eg.'http:192.168.0.5:5000'
+        :return: None
+        """
+        parsed_url = urlparse(address)
+        # netloc
+        self.nodes.add(parsed_url.netloc)
+
+>>>>>>> 7a5932843da4902c7398cf3fa0590abf2306e378
     def new_block(self, proof, previous_hash=None):
         # Create a new Block and add it to the chain
         # 当挖矿成功，找到proof之后会调用这个函数，把当前累积的无块归属的交易全部放入该块，再清空当前交易记录。
@@ -122,6 +141,68 @@ class Blockchain(object):
         guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:4] == "0000"
 
+<<<<<<< HEAD
+=======
+    def valid_chain(self, chain):
+        """
+        Determine if a given blockchain is valid
+        :param chain: <list> A blockchain
+        :return: <bool> True if valid, False if not
+        """
+        # 两个指针分别指向第一个和第二个块，分别为lastblock和block
+        last_block = chain[0]
+        current_index = 1
+        while current_index < len(chain):
+            block = chain[current_index]
+            print(f'{last_block}')
+            print(f'{block}')
+            print("\n-----------\n")
+            # Check that the hash of the block is correct
+            if block['previous_hash'] != self.hash(last_block):
+                return False
+
+            # Check that the Proof of Work is correct
+            if not self.valid_proof(last_block['proof'], block['proof']):
+                return False
+
+            # 指针后移
+            last_block = block
+            current_index += 1
+        return True
+
+    def resolve_conflicts(self):
+        """
+        共识算法解决冲突, 使用网络中最长的链. nodes is a set
+        :return: <bool> True 如果链被取代, 否则为False
+        """
+
+        neighbours = self.nodes
+        new_chain = None
+
+        # We're only looking for chains longer than ours
+        max_length = len(self.chain)
+
+        # Grab and verify the chains from all the nodes in our network
+        for node in neighbours:
+            # 获得该节点上区块链的所有信息，并分别存入
+            response = requests.get(f'http://{node}/chain')
+            if response.status_code == 200:
+                length = response.json()['length']
+                chain = response.json()['chain']
+
+                # Check if the length is longer and the chain is valid
+                if length > max_length and self.valid_chain(chain):
+                    max_length = length
+                    new_chain = chain
+
+        # Replace our chain if we discovered a new, valid chain longer than ours
+        if new_chain:
+            self.chain = new_chain
+            return True
+
+        return False
+
+>>>>>>> 7a5932843da4902c7398cf3fa0590abf2306e378
 app = Flask(__name__)
 
 # Generate a globally unique address for this node
@@ -186,5 +267,50 @@ def full_chain():
     }
     return jsonify(response), 200
 
+<<<<<<< HEAD
+=======
+# 返回流离的未归属的交易记录,当挖矿成功后会清空这些，并放入新快中
+@app.route('/currenttransactions', methods=['GET'])
+def show_currenttransactions():
+    response = {
+        'currenttransactions': blockchain.current_transactions
+    }
+    return jsonify(response), 200
+
+# 注册节点
+@app.route('/nodes/register', methods=['POST'])
+def register_nodes():
+    values = request.get_json()
+
+    nodes = values.get('nodes')
+    if nodes is None:
+        return "Error: Please supply a valid list of nodes", 400
+
+    for node in nodes:
+        blockchain.register_node(node)
+
+    response = {
+        'message': 'New nodes have been added',
+        'total_nodes': list(blockchain.nodes),
+    }
+    return jsonify(response), 201
+
+@app.route('/nodes/resolve', methods=['GET'])
+def consensus():
+    replaced = blockchain.resolve_conflicts()
+    if replaced:
+        response = {
+            'message': 'Our chain was replaced',
+            'new_chain': blockchain.chain
+        }
+    else:
+        response = {
+            'message': 'Our chain is authoritative',
+            'chain': blockchain.chain
+        }
+
+    return jsonify(response), 200
+
+>>>>>>> 7a5932843da4902c7398cf3fa0590abf2306e378
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000)

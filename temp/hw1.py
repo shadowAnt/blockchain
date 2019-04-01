@@ -30,7 +30,7 @@ def gradient_function(theta, X, y):
     diff = np.dot(X, theta) - y
     return (1./m) * np.dot(np.transpose(X), diff)
 
-def gradient_descent(X, y, alpha):
+def gradient_descent(X, y, alpha):t
     '''Perform gradient descent.'''
     theta = np.array([1, 1]).reshape(2, 1)
     gradient = gradient_function(theta, X, y)
